@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<title>iMadeIT</title>
+<head>
+    <link rel=stylesheet type=text/css href='{{url_for("static", filename="style.css")}}'>
+</head>
+<body>
+    <div class=page>
+        <h1>iMadeIT</h1>
+        <div class=metanav>
+            <div class=centered><a href='{{url_for("home")}}'>Home</a></div>
+            <div class=centered><a href='{{url_for("port_authority")}}'>The Port Authority</a></div>
+            <div class=centered><a href='{{url_for("source")}}'>How On Erf'?</a></div>
+            <div class=centered><a href='{{url_for("blog")}}'>Blog</a></div>
+            {% if session.logged_in %}       
+            <div class=centered><a href='{{url_for("logout")}}'>Logout</a></div>
+            {% else %}
+            <div class=centered><a href='{{url_for("login")}}'>Login/Create Account</a></div>
+            {% endif %}    
+            <span class=stretch />
+         </div>
+        {% for message in get_flashed_messages() %}
+            <div class=flash>{{ message }}</div>
+        {% endfor %}
+	{% if error %} <p class=error><strong>Error:   </strong>{{ error }} {% endif %}
+        {% block body %}
+        {% endblock %}
+    </div>
+</body>
+</html>
+
+
+       

@@ -1,0 +1,14 @@
+<title>Postr</title>
+<form action={{url_for('addPost')}} method=post>
+    <em>what's on your mind, brother man?</em>
+    <br>
+    <input type=textarea rows=40 cols=5 name=myPost>
+    <br>
+    <input type=submit value=post>
+    <br>
+</form>
+<ul>
+{% for post in myPosts %}
+        <li>{{ post }}</li>
+{% endfor %}
+</ul>

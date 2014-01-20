@@ -1,0 +1,16 @@
+<!doctype html>
+<title>Postr 2.0</title>
+<link rel=stylesheet type=text/css href='static/style.css'>
+<div class=page>
+    <h1>Postr</h1>
+    <div class=metanav>
+        <div style="float:left;">
+            <a href={{ url_for ('login') }}>Home</a>
+        </div>
+        <div style="float:right;">
+            <em>Don't have an account? </em><a href={{ url_for('adder') }}>create account</a>
+        </div>
+        <div style="clear:both"></div>
+    </div>
+    {% block body %}{% endblock %}
+</div>   

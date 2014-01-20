@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% block body %}
+<div style='text-align:center'>
+	<img src='http://nuweb9.neu.edu/entrepreneurs/wp-content/uploads/imadeit2.jpg' style='align:center;width:66%'>
+</div>
+<h2>Welcome!</h2>
+<ul class=bold_elements>
+    <li><strong>What is it?</strong>
+	<p>iMadeIT is a program that aims to teach members the basics (and some of the intermediates) 
+	of web development, in a fun, goofy way. No prior programming experience is required, 
+	and we have more pizza than Domino's.</p></li>
+    <li><strong>When?</strong>
+	<p>Thursdays from 7-9PM</p></li>
+    <li><strong>Where?</strong>
+	<p>102 West Village G</p></li>
+    <li><strong>Can I Come?</strong>
+	<p>Heck yes! iMadeIT is freely available to anyone who is even mildly interest in learning how to code. Come on down!</p></li>
+</ul>
+{% endblock %}
+

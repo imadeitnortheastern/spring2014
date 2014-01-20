@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block body %}
+<title>{{ my_user }}</title>
+<form action={{url_for('make_post')}} method=post>
+    <em>what's on your mind, brother man?</em>
+    <input type=textarea rows=5 cols=40 name=myPost>
+    <br>
+    <input type=submit value=post>
+    <br>
+</form>
+<ul>
+{% for post in my_posts %}
+    <li>{{ post }}</li>
+{% endfor %}
+</ul>
+{% endblock %}

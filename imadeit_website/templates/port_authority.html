@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% block body %}
+<h1><img src='https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcR45eIXxBH6F3dYftCUEFffgxWaJpIZhgMn_pq6tsuB_nTCGPSv9A'></h1>
+{% if session.port %}
+    <div style='height:50px'></div>
+    <p>Your port number is <strong>{{ session.port }}</strong></p>
+{% else %}
+    <form action="{{ url_for('port_authority') }}" method=post>
+        <dt>Select a port number from 5000 to 9999</dt>
+        <dd><input type=text name=port></dd>
+        <dd><input type=submit value="Gimme My Port, Dagnabbit!"></dd>
+    </form>
+{% endif %}
+
+{% endblock %}

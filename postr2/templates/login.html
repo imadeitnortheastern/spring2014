@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block body %}
+    <form action={{url_for('login')}} method=post>
+        Type in  your name below!
+        <br>
+        <input type=text name=user>
+        <br>
+        Type in your password here!
+        <br>
+        <input type=text name=password>
+        <br>
+        <input type=submit value="Click me">
+    </form>
+{% endblock %}
