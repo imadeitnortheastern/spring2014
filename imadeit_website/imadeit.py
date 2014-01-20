@@ -1,4 +1,4 @@
-import sqlite3
+import sqlite3, re
 import user
 from flask import Flask, session, request, redirect, \
 render_template, url_for, g, flash
@@ -48,10 +48,10 @@ def login():
         db = get_db() 
 	name = request.form['login_username']
     	pw = request.form['login_pw']
-	result = db.execute("SELECT USER_ID, PORT FROM USERS WHERE " \
-        "USERNAME=? AND PASSWORD=?", [name, pw]).fetchone()
+        query = "SELECT PORT FROM USERS WHERE USERNAME=? AND PASSWORD=?"
+        result = db.execute(query, [name, pw]).fetchone()
         if result is not None:
-            port = result[1]
+            port = result[0]
             set_session_vars(name, port)
             flash("You were logged in!")
             return redirect(url_for('home'))
@@ -71,16 +71,19 @@ def create_account():
         marketing = request.form['marketing']
         result = db.execute("SELECT USER_ID FROM USERS WHERE " \
         "USERNAME=?", [name]).fetchone()
-        if result is None:
+        if result is None and valid_email(email):
 	    query = "INSERT INTO USERS (USERNAME, PASSWORD, EMAIL, COLLEGE, MARKETING, PORT) VALUES(?, ?, ?, ?, ?, 0)"
             db.execute(query, [name,pw, email, college, marketing])
             db.commit()
-            #user.create(name, pw)
+            user.create(name, pw)
             set_session_vars(name, 0)
             flash('Your account was created successfully!')
             return redirect(url_for('home'))
         else:
-            error = 'That user name already exists :('
+            if not valid_email(email):
+                error = 'Invalid email format'
+            else: 
+                error = 'That user name already exists :('
     return render_template('login.html', error=error)
     
 def set_session_vars(name, port):
@@ -88,6 +91,12 @@ def set_session_vars(name, port):
     session['name'] = name
     session['port'] = port
 
+def valid_email(email): 
+    one_char = '[a-zA-Z0-9_]'
+    chars = '{}+'.format(one_char)
+    charsdotchars = '({}+)(\.{}+)*'.format(one_char, one_char)
+    email_re ='^' + charsdotchars + '@' + chars + '\.'+ charsdotchars + '$'
+    return re.match(email_re, email) is not None
 
 @app.route('/port_authority', methods=['GET', 'POST'])
 def port_authority():
@@ -141,4 +150,4 @@ def login_check(url):
 
 if __name__ == '__main__':
     init_db()
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=80, debug=True)
