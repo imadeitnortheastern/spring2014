@@ -24,3 +24,4 @@ fieldset	    { height:200px }
 .error          { background: #F0D6D6; padding: 0.5em; color:#000; font-family: sans-serif; font-size:1em}
 .bold_elements, 
     li          { color:#222; margin-bottom:1.2em }
+.explanation h2 { border-bottom:1px solid #ddd; padding-top:1em; padding-bottom; 1em; }

@@ -11,5 +11,33 @@
         <dd><input type=submit value="Gimme My Port, Dagnabbit!"></dd>
     </form>
 {% endif %}
+<div class=explanation>
+<h2>What's a Port?</h2><br>
+Imagine a computer's IP address is its phone number and the port is like an extension. Just like an 
+office can have one phone number and hundreds of extensions to reach individual employees, we are using 
+iMadeIT's IP as the base phone number, and giving you each an extension. This way, whenever you want to 
+show off what you're working on, you can just point your friends to imadeit.nu:<em>your port number</em>
+<br><br>
+<h2>How Do I Access My Port?</h2><br>
+<strong><em>Mac/Linux</em></strong><br>
+You can start by firing up a terminal shell by searching your applications for 'terminal'. In the window
+that opens simply type 
+<br><br><code>ssh your_user_name@imadeit.nu</code><br><br> 
+When it asks you for a password, simply type your password for this site. Any further authorization 
+questions you can answer simply by typing 'yes' and pressing enter. <br><br>
+That's it! You're in! You can get a Flask app up and running by creating a Flask file like we'll describe
+in class, but the last line should look like:<br><br>
+<code>app.run(host='0.0.0.0', port=your_port_number_here)</code>
+<br><br><br>
+<strong><em>Windows</em></strong><br>
+If you have Windows, you can will need to install 
+<a href='http://the.earth.li/~sgtatham/putty/latest/x86/putty-0.63-installer.exe'>PuTTy</a>
+ or some other SSH client on your computer.<br><br>
+In the address field you should type your_user_name@imadeit.nu and leave the port set to 22 (this is the
+port on computers that listen for SSH connections) and click connect. <br><br>
+That's it! You're in! You can get a Flask app up and running by creating a Flask file like we'll describe
+in class, but the last line should look like:<br><br>
+<code>app.run(host='0.0.0.0', port=your_port_number_here)</code>
 
+</div>
 {% endblock %}
