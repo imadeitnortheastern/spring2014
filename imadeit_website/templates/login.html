@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block body %}
-<div class=left style='width:35%;'>
+<div class=left style='width:25%;'>
     <form action=" {{ url_for('login') }} " method=post>
         <fieldset>
 	    <legend><h2>Login</h2></legend>
@@ -12,11 +12,11 @@
         </fieldset>
     </form>
 </div>
-<div class=right style='width:65%'>
+<div class=right style='width:75%'>
     <form action=" {{ url_for('create_account') }} " method=post>
         <fieldset>
 	    <legend><h2>Create Account</h2></legend>
-            <div class=left>
+            <div class=left style='width:40%;'>
 		Username:
 	            <br><input type=text name=create_username><br>
         	    <br>Password:
@@ -24,20 +24,21 @@
         	    <br>Email:
 		    <br><input type=text name=email><br>
 	    </div>
-	    <div class=right>        
-        	    <br>College:
-        	    <br><select name=college>
+	    <div class=right style='width:60%'>        
+        	    College:
+        	    <br><select name=college style='width:100%'>
         	            <option value='bouve'>Bouve School of Health Sciences</option>    
 			    <option value='camd'>College of Arts, Media and Design</option>		
 			    <option value='ccis'>College of Computer and Information Science</option>
         	            <option value='cj'>College of Criminal Justice</option>
         	            <option value='coe'>College of Engineering</option>
-        	            <option value='coe'>College of Professional Studies</option>
+        	            <option value='cps'>College of Professional Studies</option>
         	            <option value='cos'>College of Science</option>
                 	    <option value='dmsb'>D'More McKim School of Business</option>    
-	            </select><br>
+	                    <option value='other'>Other</option>
+                    </select><br>
         	    <br>How did you hear about us?
-        	    <br><select name=marketing>
+        	    <br><select name=marketing style='width:100%'>
         	            <option value='eclub'>Entrepreneur's Club Meeting</option>
         	            <option value='class'>You pitched to one of my classes</option>
         	            <option value='flyer'>I saw a flyer</option>
@@ -45,6 +46,14 @@
         	            <option value='search'>I looked for a program like this</option>
         	            <option value='other'>Other...</option>
         	        </select><br>
+                    <br>Do you have any programming experience?
+                    <br><select name=prog_expr style='width:100%'>
+                            <option value='0'>Literally zero, dude</option>
+                            <option value='1'>I messed around with the HTML on my MySpace</option>
+                            <option value='2'>I have worked with code that didn't connect to anything</option>
+                            <option value='3'>I am comfortable coding, I just want to learn more web stuff</option>
+                            <option value='4'>I am a computer god. I'm just here to let you all bask</option>
+                        </select><br>
       	      <br><input type=submit value=Create><br>
 	    </div>
         </fieldset>

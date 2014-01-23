@@ -1,4 +1,4 @@
-import sqlite3, re
+import sqlite3, re, hashlib
 import user
 from flask import Flask, session, request, redirect, \
 render_template, url_for, g, flash
@@ -26,7 +26,6 @@ def init_db():
         with app.open_resource('schema.sql', 'r') as f:
             db.executescript(f.read())
             db.commit()
-    f.close()
 
 @app.teardown_appcontext
 def close_db(error):
@@ -47,8 +46,8 @@ def login():
     if request.method == 'POST':
         db = get_db() 
 	name = request.form['login_username']
-    	pw = request.form['login_pw']
-        query = "SELECT PORT FROM USERS WHERE USERNAME=? AND PASSWORD=?"
+    	pw = encrypt_password(request.form['login_pw'])
+        query = "SELECT PORT FROM STUDENTS WHERE USERNAME=? AND PASSWORD=?"
         result = db.execute(query, [name, pw]).fetchone()
         if result is not None:
             port = result[0]
@@ -65,15 +64,18 @@ def create_account():
     if request.method == 'POST':
         db = get_db() 
 	name = request.form['create_username']
-    	pw = request.form['create_pw']
+    	pw = encrypt_password(request.form['create_pw'])
         email = request.form['email']
 	college = request.form['college']
         marketing = request.form['marketing']
-        result = db.execute("SELECT USER_ID FROM USERS WHERE " \
+        prog = request.form['prog_expr']
+        result = db.execute("SELECT USER_ID FROM STUDENTS WHERE " \
         "USERNAME=?", [name]).fetchone()
         if result is None and valid_email(email):
-	    query = "INSERT INTO USERS (USERNAME, PASSWORD, EMAIL, COLLEGE, MARKETING, PORT) VALUES(?, ?, ?, ?, ?, 0)"
-            db.execute(query, [name,pw, email, college, marketing])
+	    query = "INSERT INTO STUDENTS (USERNAME, PASSWORD, EMAIL," \
+            + " COLLEGE, MARKETING, PORT, PROG_EXPR, PARTNER_PORT, YEAR) " \
+            + "VALUES(?, ?, ?, ?, ?, ?, 0, 0, 0)"
+            db.execute(query, [name, pw, email, college, marketing, prog])
             db.commit()
             user.create(name, pw)
             set_session_vars(name, 0)
@@ -98,6 +100,10 @@ def valid_email(email):
     email_re ='^' + charsdotchars + '@' + chars + '\.'+ charsdotchars + '$'
     return re.match(email_re, email) is not None
 
+def encrypt_password(password):
+    sha = hashlib.sha224(password)
+    return sha.hexdigest()
+
 @app.route('/port_authority', methods=['GET', 'POST'])
 def port_authority():
     error = None
@@ -115,10 +121,10 @@ def register_port(port):
         return "You forgot to type a port"
     if port > 5000 and port < 10000:
         db = get_db()
-        query = 'SELECT PORT FROM USERS WHERE PORT = ?'
+        query = 'SELECT PORT FROM STUDENTS WHERE PORT = ?'
         port_in_db = db.execute(query, [port]).fetchone()
         if port_in_db is None:
-            set_port = 'UPDATE USERS SET PORT=? WHERE USERNAME=?' 
+            set_port = 'UPDATE STUDENTS SET PORT=? WHERE USERNAME=?' 
             db.execute(set_port, [port, session.get('name')])
             db.commit() 
             session['port'] = port
@@ -134,7 +140,7 @@ def source():
 
 @app.route('/blog')
 def blog():
-    return login_check('blog.html')
+    return render_template('blog.html')
 
 @app.route('/logout')
 def logout():
@@ -150,4 +156,4 @@ def login_check(url):
 
 if __name__ == '__main__':
     init_db()
-    app.run(host='0.0.0.0', port=80, debug=True)
+    app.run(host='0.0.0.0', port=80)
