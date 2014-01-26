@@ -5,6 +5,7 @@ of their code
 '''
 import sqlite3, re, hashlib
 import user
+from random import random
 from flask import Flask, session, request, redirect, \
 render_template, url_for, g, flash
 
@@ -62,7 +63,9 @@ def close_db(error):
 ############################ WEB PAGE ROUTING #################################
 ###############################################################################
 
-
+#This portion of the program tells flask what to do if it receives requests
+#at various 'routes'. If anyone visits <this IP address>/<one of these routes>
+#the code below will be run
 
 ################################## HOME ####################################
 @app.route('/')
@@ -85,38 +88,70 @@ def login():
     if request.method == 'POST':
         db = get_db() 
 	name = request.form['login_username']
-    	pw = encrypt_password(request.form['login_pw'])
-        query = "SELECT PORT FROM STUDENTS WHERE USERNAME=? AND PASSWORD=?"
-        result = db.execute(query, [name, pw]).fetchone()
+    	pw = request.form['login_pw']
+
+        #From the database, select the fields relevant for verifying a 
+        #students ID from the database records that match the given username
+        query = "SELECT PORT, PASSWORD, SALT FROM USERS WHERE USERNAME=?"
+        result = db.execute(query, [name]).fetchone()
+        
+        #If the user record exists in the database, let's check their password
         if result is not None:
-            port = result[0]
-            set_session_vars(name, port)
-            flash("You were logged in!")
-            return redirect(url_for('home'))
+            port, password, salt = result
+            if encrypt_password(pw, salt) == password:
+                set_session_vars(name, port)
+                flash("You were logged in!")
+                return redirect(url_for('home'))
+
+            else:
+                error = 'Invalid Password'
         else:
-            error = 'Invalid Username or Password'
+            error = 'Invalid Username'
+    
+    #If the request was just a GET, or something went wrong in the login, 
+    #show the login page
     return render_template('login.html', error=error)
 
+
+############################## USER CREATION ##################################
+#This is actually the same HTML page as the login page, but I put two seperate
+#forms on the page, which each cause their own action, one for login, and one
+#for creating new accounts
+#This is because I am a lazy developer. It could all be done at one route
 @app.route('/create', methods=['GET', 'POST'])
 def create_account():
     error = None
+    
+    #Like in login, if the page request was POST, it probably means the user
+    #clicked the create account button. So let's make them an account!
     if request.method == 'POST':
+        
+        #First we collect all jount they typed in
         db = get_db() 
 	name = request.form['create_username']
-        password = request.form['create_pw']
-    	pw = encrypt_password(password)
+        pw = request.form['create_pw']
         email = request.form['email']
 	college = request.form['college']
         marketing = request.form['marketing']
         prog = request.form['prog_expr']
+        
+        #Let's make sure they didn't select someone else's user name
         result = db.execute("SELECT USER_ID FROM STUDENTS WHERE " \
         "USERNAME=?", [name]).fetchone()
         if result is None and valid_email(email):
-	    query = "INSERT INTO STUDENTS (USERNAME, PASSWORD, EMAIL," \
-            + " COLLEGE, MARKETING, PORT, PROG_EXPR, PARTNER_PORT, YEAR) " \
-            + "VALUES(?, ?, ?, ?, ?, ?, 0, 0, 0)"
-            db.execute(query, [name, pw, email, college, marketing, prog])
+            
+            #Encrypt the password so I'm not tempted to hax ur facebookzzz
+            salt = hex(int(random() * 1000000))
+            enc_pw = encrypt_password(pw, salt)
+
+            #Stick all the collected info into the DB so I can stalk y'all forever
+	    query = "INSERT INTO USERS (USERNAME, PASSWORD, SALT, EMAIL," \
+            + " COLLEGE, MARKETING, PORT, PROG_EXPR, PARTNER_PORT) " \
+            + "VALUES(?, ?, ?, ?, ?, ?, ?, 0, 0)"
+            db.execute(query, [name, enc_pw, salt, email, college, marketing, prog])
             db.commit()
+
+            #Create an account on the server so that you guys can log in
             user.create(name, password)
             set_session_vars(name, 0)
             flash('Your account was created successfully!')
@@ -126,51 +161,82 @@ def create_account():
                 error = 'Invalid email format'
             else: 
                 error = 'That user name already exists :('
+    
+    #If the request was just a GET, or something went wrong in the login, 
+    #show the login page
     return render_template('login.html', error=error)
     
+
+################################# PORT AUTHORITY ##############################
+#This handles assigning ports so that everyone's got their own phone number
+#and it's not like growing up with my sister who was always on the phone and 
+
+#all I wanted to do was go on the Harry Potter website but noooooooo she HAD
+#talk to her friends about chia pets or whatever the hell teenage girls talked
+#about in the 90's
 @app.route('/port_authority', methods=['GET', 'POST'])
 def port_authority():
     error = None
+    
+    #if the user isn't logged in, redirect them to the home page
     if not session.get('logged_in'):
         flash('You need to login to access that!')
         return redirect(url_for('login'))
+
+    #If the request for was a POST type, try to register the port
     if request.method == 'POST':
         error = register_port(request.form['port'])
+    
     return render_template('port_authority.html', error=error)
 
+#Attempts to register the given port for the current user
 def register_port(port):
     try:
         port = int(port)
     except:
         return "You forgot to type a port"
+
     if port > 5000 and port < 10000:
         db = get_db()
         query = 'SELECT PORT FROM STUDENTS WHERE PORT = ?'
         port_in_db = db.execute(query, [port]).fetchone()
+        
+        #If their is no user with the given port, let's register!
         if port_in_db is None:
             set_port = 'UPDATE STUDENTS SET PORT=? WHERE USERNAME=?' 
             db.execute(set_port, [port, session.get('name')])
             db.commit() 
             session['port'] = port
             flash('You have registered port {}'.format(port))
+
         else:
             return'Some varmit took your port number already!'
+
     else:
         return 'Invalid port number, dude'
 
+################################# SOURCE ######################################
 @app.route('/source')
 def source():
     return login_check('source.html')
 
+################################# BLOG ########################################
 @app.route('/blog')
 def blog():
     return render_template('blog.html')
 
+################################# LOGOUT ######################################
+#Log me out, Scotty!
 @app.route('/logout')
 def logout():
     session.pop('logged_in')
     return redirect(url_for('home'))
 
+###############################################################################
+############################# HELPER FUNCTIONS ################################
+###############################################################################
+
+#If the user is not logged in, redirects to the login page, else renders the url
 def login_check(url):
     if not session.get('logged_in'):
         flash('You need to login to access that!')
@@ -178,11 +244,17 @@ def login_check(url):
     else:
         return render_template(url)
 
+#Updates the users session variables to the given arguments
 def set_session_vars(name, port):
     session['logged_in'] = True
     session['name'] = name
     session['port'] = port
 
+#Regex that checks that the given string is a valid email
+#We won't get into regular expressions in this course, but if you have any 
+#interest, just talk to James
+#Regex are user for determing if a string matches a specific pattern
+#They're stupid efficient
 def valid_email(email): 
     one_char = '[a-zA-Z0-9_]'
     chars = '{}+'.format(one_char)
@@ -190,11 +262,24 @@ def valid_email(email):
     email_re ='^' + charsdotchars + '@' + chars + '\.'+ charsdotchars + '$'
     return re.match(email_re, email) is not None
 
-def encrypt_password(password):
-    sha = hashlib.sha224(password)
-    return sha.hexdigest()
+#Encrypts the password
+def encrypt_password(password, salt):
+    round_one = hashlib.sha224(password)
+    round_two = hashlib.sha224(round_one.hexdigest() + salt)
+    return round_two.hexdigest()
 
-
+#This line is not strictly needed, but it is convention
+#__name__ is a special variable in a python program that reflects whether the
+#script is being run as the main thread of execution('__main__'), or if it is
+#being invoked by another program, in which case, we don't want it to start
+#the app
 if __name__ == '__main__':
+    
+    #Initalizes any changes that have been made to the database structure
+    #Usually nothing, but it makes it easy to make changes to the database
     init_db()
+    
+    #Port 80 is the default port for HTTP requests. When you visit 
+    #imadeit.nu, your browser automatically appends ":80", but for 
+    #other ports, you have to explicitly say it
     app.run(host='0.0.0.0', port=80)
