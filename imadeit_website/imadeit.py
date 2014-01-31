@@ -77,7 +77,6 @@ def home():
     return render_template('home.html')
 
 ################################# LOGIN #####################################
-
 #Either displays the login page or redirects to the home page
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -121,11 +120,12 @@ def login():
 @app.route('/create', methods=['GET', 'POST'])
 def create_account():
     error = None
-    
+    print 'in create'
+
     #Like in login, if the page request was POST, it probably means the user
     #clicked the create account button. So let's make them an account!
     if request.method == 'POST':
-        
+
         #First we collect all jount they typed in
         db = get_db() 
 	name = request.form['create_username']
@@ -134,25 +134,29 @@ def create_account():
 	college = request.form['college']
         marketing = request.form['marketing']
         prog = request.form['prog_expr']
-        
+
         #Let's make sure they didn't select someone else's user name
         result = db.execute("SELECT USER_ID FROM STUDENTS WHERE " \
         "USERNAME=?", [name]).fetchone()
         if result is None and valid_email(email):
-            
+
             #Encrypt the password so I'm not tempted to hax ur facebookzzz
             salt = hex(int(random() * 1000000))
             enc_pw = encrypt_password(pw, salt)
 
             #Stick all the collected info into the DB so I can stalk y'all forever
 	    query = "INSERT INTO USERS (USERNAME, PASSWORD, SALT, EMAIL," \
-            + " COLLEGE, MARKETING, PORT, PROG_EXPR, PARTNER_PORT) " \
+            + " COLLEGE, MARKETING, PROG_EXPR, PORT, PARTNER_PORT) " \
             + "VALUES(?, ?, ?, ?, ?, ?, ?, 0, 0)"
             db.execute(query, [name, enc_pw, salt, email, college, marketing, prog])
             db.commit()
-
+            
             #Create an account on the server so that you guys can log in
-            user.create(name, password)
+            try:
+                user.create(name, pw)
+            except:
+                print "FAILED during user creation"
+
             set_session_vars(name, 0)
             flash('Your account was created successfully!')
             return redirect(url_for('home'))
