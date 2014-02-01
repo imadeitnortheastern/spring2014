@@ -65,7 +65,7 @@ def close_db(error):
 
 #This portion of the program tells flask what to do if it receives requests
 #at various 'routes'. If anyone visits <this IP address>/<one of these routes>
-#the code below will be run
+#the code below that route will be run
 
 ################################## HOME ####################################
 @app.route('/')
@@ -82,7 +82,7 @@ def home():
 def login():
     error = None
 
-    #If HTTP request that came to this webpage was a 'post' request then it 
+    #If an HTTP request that came to this webpage was a 'post' request then it 
     #should have come from the user clicking the login button, so lets check
     if request.method == 'POST':
         db = get_db() 
@@ -130,10 +130,16 @@ def create_account():
         db = get_db() 
 	name = request.form['create_username']
         pw = request.form['create_pw']
+        check = request.form['check_pw']
         email = request.form['email']
 	college = request.form['college']
         marketing = request.form['marketing']
         prog = request.form['prog_expr']
+        
+        #check passwords match    
+        if pw != check:
+           error = 'Passwords do not match'
+           return render_template('login.html', error=error)
 
         #Let's make sure they didn't select someone else's user name
         result = db.execute("SELECT USER_ID FROM STUDENTS WHERE " \
@@ -174,7 +180,6 @@ def create_account():
 ################################# PORT AUTHORITY ##############################
 #This handles assigning ports so that everyone's got their own phone number
 #and it's not like growing up with my sister who was always on the phone and 
-
 #all I wanted to do was go on the Harry Potter website but noooooooo she HAD
 #talk to her friends about chia pets or whatever the hell teenage girls talked
 #about in the 90's
