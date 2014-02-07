@@ -11,6 +11,20 @@
         <dd><input type=submit value="Gimme My Port, Dagnabbit!"></dd>
     </form>
 {% endif %}
+{% if session.partner %}
+    <div style='height:50px;width:100%'></div>
+    <p>Your partner's port number is <strong>{{ session.partner }}</strong></p>
+{% else %}
+    <div style='height:50px;width:100%'></div>
+
+    <form action="{{ url_for('find_partner') }}" method=post>
+       <dd><input type=submit value="Gimme a partner!"></dd>
+    </form>
+{% endif %}
+
+
+
+
 <div class=explanation>
 <h2>What's a Port?</h2><br>
 Imagine a computer's IP address is its phone number and the port is like an extension. Just like an 
@@ -38,6 +52,5 @@ port on computers that listen for SSH connections) and click connect. <br><br>
 That's it! You're in! You can get a Flask app up and running by creating a Flask file like we'll describe
 in class, but the last line should look like:<br><br>
 <code>app.run(host='0.0.0.0', port=your_port_number_here)</code>
-
 </div>
 {% endblock %}

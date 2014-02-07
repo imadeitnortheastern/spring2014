@@ -5,7 +5,8 @@ of their code
 '''
 import sqlite3, re, hashlib
 import user
-from random import random
+from random import random, shuffle
+import httplib
 from flask import Flask, session, request, redirect, \
 render_template, url_for, g, flash
 
@@ -120,7 +121,6 @@ def login():
 @app.route('/create', methods=['GET', 'POST'])
 def create_account():
     error = None
-    print 'in create'
 
     #Like in login, if the page request was POST, it probably means the user
     #clicked the create account button. So let's make them an account!
@@ -224,6 +224,42 @@ def register_port(port):
     else:
         return 'Invalid port number, dude'
 
+
+@app.route('/find_partner', methods=['GET', 'POST'])
+def find_partner():
+    if request.method == 'POST':
+        print 'post request'
+        db = get_db()
+        partner_port = db.execute('SELECT PARTNER_PORT FROM USERS WHERE PORT={}'.format(str(session['port']))).fetchone()
+        print 'got partner port'
+        if partner_port:
+            print 'in partner port'
+            port_list = db.execute('SELECT PORT FROM USERS WHERE PARTNER_PORT=0')
+            print 'got ports'
+            for port in port_list:
+                try:
+                    if port[0] == 0:
+                        continue
+                    print 'trying to connect to {}...'.format(port[0])
+                    conn = httplib.HTTPConnection('imadeit.nu', port[0])
+                    conn.request('GET', 'intro')
+                    response = conn.getresponse()
+                    print response.status
+                    if response.status == 200:
+                        print 'FOUND THE IF :D'
+                        qry1 = 'UPDATE USERS SET PARTNER_PORT={} WHERE PORT={}'.format(port[0], partner_port[0])
+                        qry2 = 'UPDATE USERS SET PARTNER_PORT={} WHERE PORT={}'.format(partner_port[0], port[0])
+                        db.execute(qry1)
+                        db.execute(qry2)
+                        print 'Executes successful'
+                        db.commit()
+                        session['partner'] = partner_port[0]
+                except:
+                    pass
+    print 'returning'
+    return render_template('port_authority.html')
+        
+
 ################################# SOURCE ######################################
 @app.route('/source')
 def source():
@@ -258,6 +294,7 @@ def set_session_vars(name, port):
     session['logged_in'] = True
     session['name'] = name
     session['port'] = port
+    session['partner'] = 0
 
 #Regex that checks that the given string is a valid email
 #We won't get into regular expressions in this course, but if you have any 

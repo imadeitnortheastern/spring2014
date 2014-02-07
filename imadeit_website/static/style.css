@@ -5,7 +5,7 @@ h1                  { border-bottom: 2px solid #eee; font-size: 2.4em }
 h2                  { font-size: 1.8em; }
 p                   { font-size: 1.4em; color:#444 }
 a                   { text-align:center }
-fieldset	    { height:250px }
+fieldset	    { height:290px }
 
 .page           { margin: 2em auto; width: 60em; border: 5px solid #ccc;
                   padding: 0.8em; background: white; }
