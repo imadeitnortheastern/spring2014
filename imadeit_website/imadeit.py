@@ -68,6 +68,39 @@ def close_db(error):
 #at various 'routes'. If anyone visits <this IP address>/<one of these routes>
 #the code below that route will be run
 
+################################# ROUTER ###################################
+@app.route('/<path:route>')
+def router(route):
+    if route == None or route == 'home':
+        return redirect(url_for('home'))
+    elif route == 'login':
+        return redirect(url_for('login'))
+    elif route == 'port_authority':
+        return redirect(url_for('port_authority'))
+    elif route == 'source':
+        return redirect(url_for('source'))
+    elif route == 'blog':
+        return redirect(url_for('blog'))
+    elif route == 'create':
+        return redirect(url_for('create'))
+    elif route == 'find_partner':
+        return redirect(url_for('find_partner'))
+    elif route == 'logout':
+        return redirect(url_for('logout'))
+    else:
+        db = get_db()
+        path = str(route).split('/')
+        usr=path[0]
+        path = path[1:]
+        qry = "SELECT PORT FROM USERS WHERE USERNAME=?"
+        port = db.execute(qry, [usr]).fetchone()[0]
+        if port is not None:
+            cat_path = ''
+            for route in path:
+                cat_path += '/' + route
+            return redirect('http://imadeit.nu:{}{}'.format(port, cat_path))
+    return redirect(url_for('home', error='That user was not found'))
+
 ################################## HOME ####################################
 @app.route('/')
 def redirect_to_home():
@@ -229,6 +262,7 @@ def register_port(port):
 def find_partner():
     if request.method == 'POST':
         print 'post request'
+        my_port = session['port']
         db = get_db()
         partner_port = db.execute('SELECT PARTNER_PORT FROM USERS WHERE PORT={}'.format(str(session['port']))).fetchone()
         print 'got partner port'
@@ -247,13 +281,13 @@ def find_partner():
                     print response.status
                     if response.status == 200:
                         print 'FOUND THE IF :D'
-                        qry1 = 'UPDATE USERS SET PARTNER_PORT={} WHERE PORT={}'.format(port[0], partner_port[0])
-                        qry2 = 'UPDATE USERS SET PARTNER_PORT={} WHERE PORT={}'.format(partner_port[0], port[0])
+                        qry1 = 'UPDATE USERS SET PARTNER_PORT={} WHERE PORT={}'.format(port[0], my_port)
+                        qry2 = 'UPDATE USERS SET PARTNER_PORT={} WHERE PORT={}'.format(my_port, port[0])
                         db.execute(qry1)
                         db.execute(qry2)
                         print 'Executes successful'
                         db.commit()
-                        session['partner'] = partner_port[0]
+                        session['partner'] = port[0]
                 except:
                     pass
     print 'returning'
