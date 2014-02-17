@@ -240,12 +240,12 @@ def register_port(port):
 
     if port > 5000 and port < 10000:
         db = get_db()
-        query = 'SELECT PORT FROM STUDENTS WHERE PORT = ?'
+        query = 'SELECT PORT FROM USERS WHERE PORT = ?'
         port_in_db = db.execute(query, [port]).fetchone()
         
         #If their is no user with the given port, let's register!
         if port_in_db is None:
-            set_port = 'UPDATE STUDENTS SET PORT=? WHERE USERNAME=?' 
+            set_port = 'UPDATE USERS SET PORT=? WHERE USERNAME=?' 
             db.execute(set_port, [port, session.get('name')])
             db.commit() 
             session['port'] = port
@@ -257,41 +257,37 @@ def register_port(port):
     else:
         return 'Invalid port number, dude'
 
-
+#Attempts to find another user of the website who does not currently have a
+#partner and has a page up and running on imadeit.nu:their_port/intro
+#If it finds one, assigns this user to that partner, and that partner to this user
 @app.route('/find_partner', methods=['GET', 'POST'])
 def find_partner():
+    error = None
     if request.method == 'POST':
-        print 'post request'
         my_port = session['port']
+        if not check_page_avail(my_port, 'intro'):
+            error = "You don't have a page up and running at imadeit.nu/{}/intro".format(session['name'])
+            return render_template('port_authority.html', error=error)
         db = get_db()
-        partner_port = db.execute('SELECT PARTNER_PORT FROM USERS WHERE PORT={}'.format(str(session['port']))).fetchone()
-        print 'got partner port'
-        if partner_port:
-            print 'in partner port'
+        partner_port = db.execute('SELECT PARTNER_PORT FROM USERS WHERE PORT={}'.format(str(my_port))).fetchone()[0]
+        if not partner_port:
             port_list = db.execute('SELECT PORT FROM USERS WHERE PARTNER_PORT=0')
-            print 'got ports'
             for port in port_list:
                 try:
                     if port[0] == 0:
                         continue
-                    print 'trying to connect to {}...'.format(port[0])
-                    conn = httplib.HTTPConnection('imadeit.nu', port[0])
-                    conn.request('GET', 'intro')
-                    response = conn.getresponse()
-                    print response.status
-                    if response.status == 200:
-                        print 'FOUND THE IF :D'
+                    if check_page_avail(port[0], 'intro'):
                         qry1 = 'UPDATE USERS SET PARTNER_PORT={} WHERE PORT={}'.format(port[0], my_port)
                         qry2 = 'UPDATE USERS SET PARTNER_PORT={} WHERE PORT={}'.format(my_port, port[0])
                         db.execute(qry1)
                         db.execute(qry2)
-                        print 'Executes successful'
                         db.commit()
                         session['partner'] = port[0]
                 except:
                     pass
-    print 'returning'
-    return render_template('port_authority.html')
+    if session['partner'] == 0 or session['partner'] is None:
+        error = 'Sorry, no partners are currently available. Try again in a minute or two!'
+    return render_template('port_authority.html', error=error)
         
 
 ################################# SOURCE ######################################
@@ -347,6 +343,19 @@ def encrypt_password(password, salt):
     round_one = hashlib.sha224(password)
     round_two = hashlib.sha224(round_one.hexdigest() + salt)
     return round_two.hexdigest()
+
+#Determines if the given port is hosting anything at the 
+#specified route
+def check_page_avail(port, route):
+    try:
+        conn = httplib.HTTPConnection('imadeit.nu', port)
+        conn.request('GET', str(route))
+        response = conn.getresponse()
+        return response.status == 200
+    except:
+        return False
+ 
+
 
 #This line is not strictly needed, but it is convention
 #__name__ is a special variable in a python program that reflects whether the
