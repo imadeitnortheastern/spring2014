@@ -69,6 +69,8 @@ def close_db(error):
 #the code below that route will be run
 
 ################################# ROUTER ###################################
+#Determines if the path a client is requesting is a site path, or a user's
+#personal web app, and reroutes accordingly
 @app.route('/<path:route>')
 def router(route):
     if route == None or route == 'home':
@@ -125,14 +127,14 @@ def login():
 
         #From the database, select the fields relevant for verifying a 
         #students ID from the database records that match the given username
-        query = "SELECT PORT, PASSWORD, SALT FROM USERS WHERE USERNAME=?"
+        query = "SELECT PORT, PASSWORD, SALT, PARTNER_PORT FROM USERS WHERE USERNAME=?"
         result = db.execute(query, [name]).fetchone()
         
         #If the user record exists in the database, let's check their password
         if result is not None:
-            port, password, salt = result
+            port, password, salt, partner_port = result
             if encrypt_password(pw, salt) == password:
-                set_session_vars(name, port)
+                set_session_vars(name, port, partner_port)
                 flash("You were logged in!")
                 return redirect(url_for('home'))
 
@@ -196,7 +198,7 @@ def create_account():
             except:
                 print "FAILED during user creation"
 
-            set_session_vars(name, 0)
+            set_session_vars(name, 0, 0)
             flash('Your account was created successfully!')
             return redirect(url_for('home'))
         else:
@@ -320,11 +322,11 @@ def login_check(url):
         return render_template(url)
 
 #Updates the users session variables to the given arguments
-def set_session_vars(name, port):
+def set_session_vars(name, port, partner):
     session['logged_in'] = True
     session['name'] = name
     session['port'] = port
-    session['partner'] = 0
+    session['partner'] = partner
 
 #Regex that checks that the given string is a valid email
 #We won't get into regular expressions in this course, but if you have any 

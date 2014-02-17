@@ -1,6 +1,35 @@
 {% extends 'layout.html' %}
 {% block body %}
 <div class=post>
+<h2 style='border-bottom:2px solid #ccc'>Getting Your Own App Up On iMadeIT.nu</h2><br>
+
+The first step is SSHing into the iMadeIT server. There are instructions over at <a href='/port_authority#how_to'>The Port Authority</a> 
+explaining how to SSH depending on your OS, but the idea is the same regardless; you are remotely logging into a computer that you will 
+load your application onto. The steps for getting your wep app up are almost perfectly analogous to getting an app up and running on 
+your own computer. The only difference is on the last line of your flask app, where you had the line:
+
+<br><br><code>app.run()</code><br><br>
+
+This line only runs the app locally on your own computer, and if you leave it like that, it will only run it locally on the server. If 
+you want to get make it visible to the outside world, you need to set the host argument to be globally visible, which is accomplished by 
+setting <code>host='0.0.0.0'</code>. The only step left is to make sure that the port on the server that your are listening on isn't being used by 
+someone else. If you haven't selected a port yet, go ahead and visit <a href='/port_authority'>The Port Authority</a> and selecting one. 
+If you have, you just need to set the port argument equal to your port (<code>port=<em>your_port</em></code>).<br><br>
+
+So for example, with my port number being 6478, my last line is: 
+
+<br><br><code>app.run(host='0.0.0.0', port=6478)</code><br><br>
+And with my app being called <code>hello.py</code>, I can get my app up and running by typing:
+
+<br><br><code>python hello.py & </code><br><br>
+To visit your page, all you need to do is visit <strong>iMadeIT.nu/your_user_name/your_app_route</strong> So, with my username being 
+jamesmc, and my flask app having instructions for <code>@app.route('/intro')</code> I would visit:
+
+<br><br><strong>iMadeIT.nu/jamesmc/intro</strong><br><br>
+
+Get some cool sites up!
+</div>
+<div class=post>
     <a href=https://imadeit.wufoo.com/forms/quarterway-survey/><h1>Take our survey!</h1></a>
 <div style='height:30px;width:100%'></div>
 </div>
