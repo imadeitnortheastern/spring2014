@@ -163,11 +163,11 @@ def create_account():
 
         #First we collect all jount they typed in
         db = get_db() 
-	name = request.form['create_username']
+        name = request.form['create_username']
         pw = request.form['create_pw']
         check = request.form['check_pw']
         email = request.form['email']
-	college = request.form['college']
+        college = request.form['college']
         marketing = request.form['marketing']
         prog = request.form['prog_expr']
         
@@ -177,16 +177,23 @@ def create_account():
            return render_template('login.html', error=error)
 
         #Let's make sure they didn't select someone else's user name
-        result = db.execute("SELECT USER_ID FROM STUDENTS WHERE " \
+        result = db.execute("SELECT USER_ID FROM USERS WHERE " \
         "USERNAME=?", [name]).fetchone()
-        if result is None and valid_email(email):
+        if result is not None:
+            error = 'That user name already exists :('
+        elif not valid_email(email):
+            error = 'Invalid email format'
+        elif re.search('[^\w.]', name): # only allow a-zA-Z0-9_. for usernames
+            error = 'Invalid username format'
+
+        if not error:
 
             #Encrypt the password so I'm not tempted to hax ur facebookzzz
             salt = hex(int(random() * 1000000))
             enc_pw = encrypt_password(pw, salt)
 
             #Stick all the collected info into the DB so I can stalk y'all forever
-	    query = "INSERT INTO USERS (USERNAME, PASSWORD, SALT, EMAIL," \
+            query = "INSERT INTO USERS (USERNAME, PASSWORD, SALT, EMAIL," \
             + " COLLEGE, MARKETING, PROG_EXPR, PORT, PARTNER_PORT) " \
             + "VALUES(?, ?, ?, ?, ?, ?, ?, 0, 0)"
             db.execute(query, [name, enc_pw, salt, email, college, marketing, prog])
@@ -201,11 +208,6 @@ def create_account():
             set_session_vars(name, 0, 0)
             flash('Your account was created successfully!')
             return redirect(url_for('home'))
-        else:
-            if not valid_email(email):
-                error = 'Invalid email format'
-            else: 
-                error = 'That user name already exists :('
     
     #If the request was just a GET, or something went wrong in the login, 
     #show the login page
